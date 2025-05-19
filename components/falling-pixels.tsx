@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 interface Pixel {
   id: number
@@ -14,10 +14,11 @@ interface Pixel {
 
 export function FallingPixels() {
   const [pixels, setPixels] = useState<Pixel[]>([])
+  const nextPixelId = useRef(0)
 
   useEffect(() => {
     // Create initial pixels
-    const initialPixels: Pixel[] = Array.from({ length: 15 }, (_, i) => createPixel(i))
+    const initialPixels: Pixel[] = Array.from({ length: 15 }, () => createPixel(nextPixelId.current++))
     setPixels(initialPixels)
 
     // Animation frame for falling pixels
@@ -41,7 +42,7 @@ export function FallingPixels() {
           const newPixelsNeeded = 15 - filteredPixels.length
 
           if (newPixelsNeeded > 0) {
-            const newPixels = Array.from({ length: newPixelsNeeded }, (_, i) => createPixel(filteredPixels.length + i))
+            const newPixels = Array.from({ length: newPixelsNeeded }, () => createPixel(nextPixelId.current++))
             return [...filteredPixels, ...newPixels]
           }
 

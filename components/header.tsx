@@ -18,6 +18,14 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const scrollToSection = (sectionId: string, callback?: () => void) => {
+    const section = document.getElementById(sectionId)
+    section?.scrollIntoView({ behavior: "smooth" })
+    if (callback) {
+      callback()
+    }
+  }
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -33,18 +41,39 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#about" className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors" scroll={false}>
+            <Link
+              href="#about"
+              className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
+              onClick={(e) => {
+                e.preventDefault() // Prevent default hash jump
+                scrollToSection("about")
+              }}
+            >
               About
             </Link>
-            <Link href="#features" className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors" scroll={false}>
+            <Link
+              href="#features"
+              className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToSection("features")
+              }}
+            >
               Features
             </Link>
-            <Link href="#agents" className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors" scroll={false}>
+            <Link
+              href="#agents"
+              className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToSection("agents")
+              }}
+            >
               Agents
             </Link>
             <Button
               className="bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33] font-pixel transition-all hover:scale-105 pixel-button"
-              onClick={() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => scrollToSection("waitlist")}
             >
               Join Waitlist
             </Button>
@@ -62,32 +91,37 @@ export function Header() {
             <Link
               href="#about"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
-              scroll={false}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToSection("about", () => setIsMobileMenuOpen(false))
+              }}
             >
               About
             </Link>
             <Link
               href="#features"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
-              scroll={false}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToSection("features", () => setIsMobileMenuOpen(false))
+              }}
             >
               Features
             </Link>
             <Link
               href="#agents"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
-              scroll={false}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToSection("agents", () => setIsMobileMenuOpen(false))
+              }}
             >
               Agents
             </Link>
             <Button
               className="bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33] font-pixel transition-all hover:scale-105 pixel-button w-full"
               onClick={() => {
-                document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
-                setIsMobileMenuOpen(false)
+                scrollToSection("waitlist", () => setIsMobileMenuOpen(false))
               }}
             >
               Join Waitlist
