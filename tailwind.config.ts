@@ -1,10 +1,11 @@
 import type { Config } from "tailwindcss"
-import defaultConfig from "shadcn/ui/tailwind.config"
+// import defaultConfig from "shadcn/ui/tailwind.config" // Removed this problematic import
 
 const config = {
-  ...defaultConfig,
+  // Removed spreads of defaultConfig
+  darkMode: ["class"], // Assuming you want dark mode, standard for shadcn/ui
   content: [
-    ...defaultConfig.content,
+    // defaultConfig.content, // Removed
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
@@ -12,7 +13,7 @@ const config = {
     "*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    ...defaultConfig.theme,
+    // ...defaultConfig.theme, // Removed
     container: {
       center: true,
       padding: "2rem",
@@ -21,9 +22,9 @@ const config = {
       },
     },
     extend: {
-      ...defaultConfig.theme.extend,
+      // ...defaultConfig.theme.extend, // Removed
       colors: {
-        ...defaultConfig.theme.extend.colors,
+        // ...defaultConfig.theme.extend.colors, // Removed
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -66,9 +67,23 @@ const config = {
       fontFamily: {
         pixel: ["PixelFont", "monospace"],
       },
+      keyframes: { // Added standard keyframes for shadcn/ui animations
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: { // Added standard animations for shadcn/ui
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
     },
   },
-  plugins: [...defaultConfig.plugins, require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate")], // Removed spread of defaultConfig.plugins
 } satisfies Config
 
 export default config

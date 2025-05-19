@@ -23,7 +23,10 @@ export function PixelatedStars() {
             width: `${star.size}px`,
             height: `${star.size}px`,
             backgroundColor: star.color,
-            animation: `twinkle ${star.duration}s ease-in-out infinite`,
+            animationName: 'twinkle',
+            animationDuration: `${star.duration}s`,
+            animationTimingFunction: 'ease-in-out',
+            animationIterationCount: 'infinite',
             animationDelay: `${star.delay}s`,
           }}
         />
