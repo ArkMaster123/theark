@@ -13,30 +13,66 @@ export function WaitlistForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [email, setEmail] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email) return
 
     setIsSubmitting(true)
+    setError(null)
+    const webhookUrl = process.env.NEXT_PUBLIC_WAITLIST_WEBHOOK_URL
 
-    // Simulate API call
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Success
-      setIsSuccess(true)
+    if (!webhookUrl) {
+      console.error("Waitlist webhook URL is not configured.")
       toast({
-        title: "Welcome aboard TH3 ARK!",
-        description: "You've secured your spot on the waitlist. We'll notify you when it's time to embark.",
+        title: "Configuration Error",
+        description: "The waitlist system is not properly configured. Please contact support.",
+        variant: "destructive",
+      })
+      setIsSubmitting(false)
+      return
+    }
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
       })
 
-      // Reset form
-      setEmail("")
-    } catch (error) {
+      if (response.ok) {
+        // Make.com webhooks usually return "Accepted" with a 200 status
+        // You might want to check response.text() if a specific body is expected for success
+        setIsSuccess(true)
+        toast({
+          title: "Welcome aboard TH3 ARK!",
+          description: "You've secured your spot on the waitlist. We'll notify you when it's time to embark.",
+        })
+        setEmail("") // Reset form
+      } else {
+        // Handle non-200 responses
+        const errorData = await response.text() // Or response.json() if your webhook returns JSON errors
+        console.error("Webhook submission error:", response.status, errorData)
+        setError(`An error occurred: ${response.status}. Please try again.`)
+        toast({
+          title: "Submission Failed",
+          description: `Could not join the waitlist. Server responded with: ${response.status}. Please try again later.`, // More specific error from response.status
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      console.error("Network or other error during webhook submission:", err)
+      let errorMessage = "An unexpected error occurred. Please check your connection and try again."
+      if (err instanceof Error) {
+        errorMessage = err.message
+      }
+      setError(errorMessage)
       toast({
         title: "Something went wrong",
-        description: "Please try again later.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -69,7 +105,9 @@ export function WaitlistForm() {
                 className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input"
               />
             </div>
-
+            {error && (
+              <p className="text-sm text-red-500 font-pixel">{error}</p>
+            )}
             <Button
               type="submit"
               disabled={isSubmitting}
@@ -93,10 +131,13 @@ export function WaitlistForm() {
           </p>
 
           <Button
-            onClick={() => setIsSuccess(false)}
+            onClick={() => {
+              setIsSuccess(false)
+              setError(null) // Reset error state if they want to try again or invite friend
+            }}
             className="mt-6 bg-[#5D4777] hover:bg-[#6D57A7] text-[#F8E8BE] font-pixel transition-all hover:scale-105 pixel-button"
           >
-            INVITE A FRIEND
+            JOIN WITH ANOTHER EMAIL
           </Button>
         </motion.div>
       )}
