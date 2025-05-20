@@ -25,6 +25,16 @@ export interface DecorationProps {
   imagePath: string
   solid: boolean
   scale: number
+  isDoor?: boolean
+  targetRoomIndex?: number
+  targetEntryPointKey?: string
+}
+
+export interface Room {
+  name: string
+  tileMap: Tile[][]
+  decorations: DecorationProps[]
+  entryPoints: { [key: string]: { x: number, y: number } }
 }
 
 export class Decoration {
@@ -38,6 +48,9 @@ export class Decoration {
   public solid: boolean // Whether characters can pass through
   public scale: number
   public loaded: boolean
+  public isDoor?: boolean
+  public targetRoomIndex?: number
+  public targetEntryPointKey?: string
   
   constructor(props: DecorationProps) {
     this.type = props.type
@@ -48,6 +61,9 @@ export class Decoration {
     this.imagePath = props.imagePath
     this.solid = props.solid
     this.scale = props.scale
+    this.isDoor = props.isDoor
+    this.targetRoomIndex = props.targetRoomIndex
+    this.targetEntryPointKey = props.targetEntryPointKey
     this.loaded = false
     
     // Load image
@@ -88,38 +104,73 @@ export class WorldEnvironment {
   public tilesLoaded: boolean
   public backgroundImage: HTMLImageElement | null
   public backgroundLoaded: boolean
+  public rooms: Room[]
+  public currentRoomIndex: number
   
   constructor(width: number, height: number, tileSize: number = 64) {
     this.tileSize = tileSize
-    this.mapWidth = width
-    this.mapHeight = height
+    // These will be set by loadRoom
+    this.mapWidth = 0 
+    this.mapHeight = 0
     this.tiles = []
     this.decorations = []
     this.tileImages = new Map()
     this.tilesLoaded = false
     this.backgroundImage = null
     this.backgroundLoaded = false
+    this.rooms = []
+    this.currentRoomIndex = 0
     
-    // Initialize empty tile grid and ensure all grass tiles are walkable
-    for (let y = 0; y < height; y++) {
-      this.tiles[y] = []
-      for (let x = 0; x < width; x++) {
-        // Default to grass tiles
-        this.tiles[y][x] = {
-          type: TileType.GRASS,
-          x: x * tileSize,
-          y: y * tileSize,
-          width: tileSize,
-          height: tileSize,
-          walkable: true  // Ensure grass is walkable
-        }
-      }
-    }
-    
-    // Load background image
+    // Load background image (can be common or room-specific)
     this.loadBackgroundImage()
+
+    // Define the initial world as the first room
+    const sampleRoom = this.createSampleWorld(width, height, tileSize)
+    this.addRoom(sampleRoom)
+
+    // Create and add the indoor house room
+    const indoorHouseRoom = this.createIndoorHouseRoom(tileSize)
+    this.addRoom(indoorHouseRoom)
+    
+    this.loadRoom(0) // Load the initial outdoor room
   }
   
+  addRoom(room: Room): void {
+    this.rooms.push(room)
+  }
+
+  loadRoom(roomIndex: number): void {
+    if (roomIndex < 0 || roomIndex >= this.rooms.length) {
+      console.error(`Invalid roomIndex: ${roomIndex}`)
+      return
+    }
+
+    this.currentRoomIndex = roomIndex
+    const room = this.rooms[roomIndex]
+
+    // Clear existing tiles and decorations
+    this.tiles = []
+    this.decorations = []
+
+    // Populate tiles
+    this.tiles = room.tileMap.map(row => 
+      row.map(tileData => ({ ...tileData }))
+    )
+    
+    // Update map dimensions
+    if (room.tileMap.length > 0) {
+      this.mapHeight = room.tileMap.length
+      this.mapWidth = room.tileMap[0].length
+    } else {
+      this.mapHeight = 0
+      this.mapWidth = 0
+    }
+    
+    // Populate decorations
+    room.decorations.forEach(decorationProp => {
+      this.addDecoration(new Decoration(decorationProp))
+    })
+  }
   private loadBackgroundImage(): void {
     this.backgroundImage = new Image()
     this.backgroundImage.src = '/images/assets/Tiles/Grass_Middle.png'
@@ -282,7 +333,10 @@ export class WorldEnvironment {
           height: decoration.height,
           imagePath: decoration.imagePath,
           solid: decoration.solid,
-          scale: decoration.scale
+          scale: decoration.scale,
+          isDoor: decoration.isDoor,
+          targetRoomIndex: decoration.targetRoomIndex,
+          targetEntryPointKey: decoration.targetEntryPointKey
         });
         
         // Use the original loaded image for faster rendering
@@ -294,42 +348,65 @@ export class WorldEnvironment {
     }
   }
   
-  // Create a sample world with a mix of different tiles and decorations
-  createSampleWorld(): void {
-    // Create a central grass area (already the default)
+  // Create a sample world and return it as a Room object
+  createSampleWorld(width: number, height: number, tileSize: number): Room {
+    const tiles: Tile[][] = []
+    // Initialize empty tile grid
+    for (let y = 0; y < height; y++) {
+      tiles[y] = []
+      for (let x = 0; x < width; x++) {
+        tiles[y][x] = {
+          type: TileType.GRASS,
+          x: x * tileSize,
+          y: y * tileSize,
+          width: tileSize,
+          height: tileSize,
+          walkable: true
+        }
+      }
+    }
+
+    // Helper to set a specific tile type in the local tiles array
+    const setLocalTile = (loopX: number, loopY: number, type: TileType, walkable: boolean = true) => {
+      if (loopY >= 0 && loopY < tiles.length && loopX >= 0 && loopX < tiles[loopY].length) {
+        tiles[loopY][loopX].type = type
+        tiles[loopY][loopX].walkable = walkable
+      }
+    }
+
+    // Helper to create a rectangle of tiles in the local tiles array
+    const createLocalTileArea = (startX: number, startY: number, areaWidth: number, areaHeight: number, type: TileType, walkable: boolean = true) => {
+      for (let y = startY; y < startY + areaHeight; y++) {
+        for (let x = startX; x < startX + areaWidth; x++) {
+          setLocalTile(x, y, type, walkable)
+        }
+      }
+    }
+
+    // Add a water pond
+    createLocalTileArea(5, 5, 6, 4, TileType.WATER, false)
     
-    // Add a water pond - make it larger so it's clearly visible
-    this.createTileArea(5, 5, 6, 4, TileType.WATER, false)
+    // Add paths
+    createLocalTileArea(3, 10, 20, 1, TileType.PATH)
+    createLocalTileArea(12, 10, 1, 10, TileType.PATH)
+    createLocalTileArea(12, 20, 10, 1, TileType.PATH)
+    createLocalTileArea(22, 10, 1, 10, TileType.PATH)
+    createLocalTileArea(18, 15, 4, 1, TileType.PATH)
+    createLocalTileArea(8, 15, 4, 1, TileType.PATH)
     
-    // Add a path that goes around the world
-    // Horizontal path
-    this.createTileArea(3, 10, 20, 1, TileType.PATH)
-    // Vertical path 
-    this.createTileArea(12, 10, 1, 10, TileType.PATH)
+    // Add a farming area
+    createLocalTileArea(15, 5, 4, 3, TileType.FARMLAND)
     
-    // Add more paths to allow better navigation
-    // Bottom horizontal path
-    this.createTileArea(12, 20, 10, 1, TileType.PATH)
-    // Right vertical path
-    this.createTileArea(22, 10, 1, 10, TileType.PATH)
-    // Bottom-right connector
-    this.createTileArea(18, 15, 4, 1, TileType.PATH)
-    // Bottom-left connector
-    this.createTileArea(8, 15, 4, 1, TileType.PATH)
+    // Add cliffs
+    createLocalTileArea(20, 1, 5, 5, TileType.CLIFF, false)
     
-    // Add a larger farming area
-    this.createTileArea(15, 5, 4, 3, TileType.FARMLAND)
+    // Add a beach area
+    createLocalTileArea(5, 15, 8, 3, TileType.BEACH)
     
-    // Add cliffs in the top right corner
-    this.createTileArea(20, 1, 5, 5, TileType.CLIFF, false)
-    
-    // Add a beach area at the bottom
-    this.createTileArea(5, 15, 8, 3, TileType.BEACH)
-    
+    const decorations: DecorationProps[] = []
     // Add decorations
-    // Trees - place multiple trees to create a forest area
     for (let i = 0; i < 5; i++) {
-      this.addDecoration(new Decoration({
+      decorations.push({
         type: 'tree',
         x: 300 + i * 100,
         y: 150,
@@ -338,12 +415,11 @@ export class WorldEnvironment {
         imagePath: '/images/assets/Outdoor decoration/Oak_Tree.png',
         solid: true,
         scale: 1
-      }))
+      })
     }
     
-    // Small trees
     for (let i = 0; i < 3; i++) {
-      this.addDecoration(new Decoration({
+      decorations.push({
         type: 'tree-small',
         x: 350 + i * 80,
         y: 200,
@@ -352,23 +428,24 @@ export class WorldEnvironment {
         imagePath: '/images/assets/Outdoor decoration/Oak_Tree_Small.png',
         solid: true,
         scale: 1
-      }))
+      })
     }
     
-    // House
-    this.addDecoration(new Decoration({
+    decorations.push({
       type: 'house',
       x: 700,
       y: 300,
       width: 192,
       height: 192,
       imagePath: '/images/assets/Outdoor decoration/House.png',
-      solid: true,
-      scale: 1
-    }))
+      solid: true, // Remains solid for appearance
+      scale: 1,
+      isDoor: true,
+      targetRoomIndex: 1, // Points to the IndoorHouse room
+      targetEntryPointKey: 'mainDoor'
+    })
     
-    // Bridge crossing the water
-    this.addDecoration(new Decoration({
+    decorations.push({
       type: 'bridge',
       x: 350,
       y: 350,
@@ -377,23 +454,21 @@ export class WorldEnvironment {
       imagePath: '/images/assets/Outdoor decoration/Bridge_Wood.png',
       solid: false,
       scale: 1
-    }))
+    })
     
-    // Chest
-    this.addDecoration(new Decoration({
+    decorations.push({
       type: 'chest',
-      x: 760,  // Move to a position on land near the house
-      y: 480,  // Move to a position on land near the path
+      x: 760,
+      y: 480,
       width: 32,
       height: 32,
       imagePath: '/images/assets/Outdoor decoration/Chest.png',
       solid: true,
       scale: 1
-    }))
+    })
     
-    // Fences around the farm area
     for (let i = 0; i < 5; i++) {
-      this.addDecoration(new Decoration({
+      decorations.push({
         type: 'fence',
         x: 400 + i * 32,
         y: 500,
@@ -402,7 +477,77 @@ export class WorldEnvironment {
         imagePath: '/images/assets/Outdoor decoration/Fences.png',
         solid: true,
         scale: 1
-      }))
+      })
+    }
+
+    return {
+      name: 'Outdoor World',
+      tileMap: tiles,
+      decorations: decorations,
+      entryPoints: { 
+        'default': { x: tileSize * 2, y: tileSize * 2 },
+        'houseExit': { x: 700 + (192/2), y: 300 + 192 + 20 } // Entry point when exiting the house
+      } 
     }
   }
-} 
+
+  createIndoorHouseRoom(tileSize: number): Room {
+    const roomWidth = 10
+    const roomHeight = 8
+    const tiles: Tile[][] = []
+
+    // Initialize empty tile grid with PATH tiles
+    for (let y = 0; y < roomHeight; y++) {
+      tiles[y] = []
+      for (let x = 0; x < roomWidth; x++) {
+        tiles[y][x] = {
+          type: TileType.PATH, // Using PATH as wood floor
+          x: x * tileSize,
+          y: y * tileSize,
+          width: tileSize,
+          height: tileSize,
+          walkable: true
+        }
+      }
+    }
+
+    const decorations: DecorationProps[] = []
+
+    // Add a table (using Chest.png as a placeholder)
+    decorations.push({
+      type: 'table',
+      x: 3 * tileSize,
+      y: 3 * tileSize,
+      width: 64, // Actual image width for Chest.png
+      height: 32, // Actual image height for Chest.png
+      imagePath: '/images/assets/Outdoor decoration/Chest.png',
+      solid: true,
+      scale: 1 
+    })
+
+    // Add an exit door (using House.png scaled down)
+    const exitDoorHeight = 64 // Scaled down height
+    decorations.push({
+      type: 'door_exit',
+      x: 5 * tileSize - (32 / 2), // Centered
+      y: (roomHeight -1) * tileSize - exitDoorHeight + tileSize/2, // Positioned at the bottom edge, slight offset up
+      width: 192, // Original House.png width
+      height: 192, // Original House.png height
+      imagePath: '/images/assets/Outdoor decoration/House.png',
+      solid: false, // Non-solid to allow interaction
+      scale: 0.33, // Scaled down to represent an indoor door
+      isDoor: true,
+      targetRoomIndex: 0, // Points back to the Outdoor World
+      targetEntryPointKey: 'houseExit'
+    })
+
+    return {
+      name: 'IndoorHouse',
+      tileMap: tiles,
+      decorations: decorations,
+      entryPoints: {
+        'mainDoor': { x: 5 * tileSize, y: (roomHeight - 2) * tileSize } // Appear near the bottom, in front of the door
+      }
+    }
+  }
+}
