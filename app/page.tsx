@@ -21,17 +21,6 @@ const FallingPixels = dynamic(() => import("@/components/falling-pixels").then(m
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0D1B33] text-[#F8E8BE] font-pixel overflow-hidden">
-      {/* Add a prominent link to the character world at the top of the page */}
-      <div className="fixed top-4 right-4 z-50">
-        <a 
-          href="/home" 
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all"
-        >
-          <span>Enter Character World</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </a>
-      </div>
-
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <PixelatedStars />
