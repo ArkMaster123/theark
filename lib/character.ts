@@ -215,30 +215,46 @@ export class Character {
     // Check collisions with world decorations and tiles
     let hasEnvironmentCollision = false
     if (worldEnvironment) {
-      // Convert character position to world coordinates if viewport is provided
-      const worldX = viewportOffset ? newPosition.x + viewportOffset.x : newPosition.x
-      const worldY = viewportOffset ? newPosition.y + viewportOffset.y : newPosition.y
+      // newPosition is already in world coordinates.
+      // collisionBounds are offsets from newPosition.
       
-      // Check if all corners of the collision box are on walkable tiles
-      const bottomLeftWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x, worldY + collisionBounds.y + collisionBounds.height)
-      const bottomRightWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x + collisionBounds.width, worldY + collisionBounds.y + collisionBounds.height)
-      const centerBottomWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x + (collisionBounds.width/2), worldY + collisionBounds.y + collisionBounds.height)
-      const centerWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x + (collisionBounds.width/2), worldY + collisionBounds.y + (collisionBounds.height/2))
+      // Define the character's collision box in world coordinates.
+      // These offsets (0.2, 0.6 etc.) are based on the character's sprite to define its "feet" or interaction area.
+      const characterWorldCollisionBox = {
+        x: newPosition.x + (this.frameWidth * this.scale * 0.2),
+        y: newPosition.y + (this.frameHeight * this.scale * 0.6),
+        width: this.frameWidth * this.scale * 0.6,
+        height: this.frameHeight * this.scale * 0.3
+      };
+
+      // Check tile walkability based on points within the character's world collision box.
+      // Example: Check the bottom-center point of the character's collision box.
+      const footX = characterWorldCollisionBox.x + characterWorldCollisionBox.width / 2;
+      const footY = characterWorldCollisionBox.y + characterWorldCollisionBox.height;
       
-      // Consider a tile walkable if center point OR either bottom corners are walkable
-      const isOnWalkableTile = centerWalkable || centerBottomWalkable || (bottomLeftWalkable && bottomRightWalkable)
+      // Check multiple points for better accuracy if needed.
+      // For simplicity, using one point as in the original logic's intent for isOnWalkableTile.
+      // The original logic checked multiple points; let's replicate that with correct coordinates.
+      const checkPointBottomLeftX = characterWorldCollisionBox.x;
+      const checkPointBottomLeftY = characterWorldCollisionBox.y + characterWorldCollisionBox.height;
+
+      const checkPointBottomRightX = characterWorldCollisionBox.x + characterWorldCollisionBox.width;
+      const checkPointBottomRightY = characterWorldCollisionBox.y + characterWorldCollisionBox.height;
       
-      // Adjust world coordinates for decoration collision
-      const worldCollisionBounds = {
-        x: worldX + collisionBounds.x - (viewportOffset?.x || 0),
-        y: worldY + collisionBounds.y - (viewportOffset?.y || 0),
-        width: collisionBounds.width,
-        height: collisionBounds.height
-      }
+      const checkPointCenterX = characterWorldCollisionBox.x + characterWorldCollisionBox.width / 2;
+      const checkPointCenterY = characterWorldCollisionBox.y + characterWorldCollisionBox.height / 2;
+
+      const bottomLeftWalkable = worldEnvironment.isWalkable(checkPointBottomLeftX, checkPointBottomLeftY);
+      const bottomRightWalkable = worldEnvironment.isWalkable(checkPointBottomRightX, checkPointBottomRightY);
+      const centerBottomWalkable = worldEnvironment.isWalkable(footX, footY); // footX, footY is already bottom-center
+      const centerWalkable = worldEnvironment.isWalkable(checkPointCenterX, checkPointCenterY);
       
-      const hasDecorationCollision = worldEnvironment.checkDecorationCollision(worldCollisionBounds)
+      const isOnWalkableTile = centerWalkable || centerBottomWalkable || (bottomLeftWalkable && bottomRightWalkable);
       
-      hasEnvironmentCollision = !isOnWalkableTile || hasDecorationCollision
+      // Check decoration collision using the character's world collision box.
+      const hasDecorationCollision = worldEnvironment.checkDecorationCollision(characterWorldCollisionBox);
+      
+      hasEnvironmentCollision = !isOnWalkableTile || hasDecorationCollision;
     }
     
     if (!hasCharacterCollision && !hasEnvironmentCollision) {

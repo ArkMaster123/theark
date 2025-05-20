@@ -8,6 +8,7 @@ type Keys = {
   ArrowLeft: boolean
   ArrowRight: boolean
   Space: boolean
+  KeyE: boolean
 }
 
 export function useCharacterControls() {
@@ -17,26 +18,51 @@ export function useCharacterControls() {
     ArrowLeft: false,
     ArrowRight: false,
     Space: false,
+    KeyE: false,
   })
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-        // Prevent default to avoid scrolling with arrow keys
-        e.preventDefault()
+      const keyMap: { [key: string]: keyof Keys } = {
+        'ArrowUp': 'ArrowUp',
+        'ArrowDown': 'ArrowDown',
+        'ArrowLeft': 'ArrowLeft',
+        'ArrowRight': 'ArrowRight',
+        ' ': 'Space',
+        'e': 'KeyE',
+        'E': 'KeyE'
+      }
+      const mappedKey = keyMap[e.key]
+
+      if (mappedKey) {
+        // Prevent default for arrow keys and space (scrolling/page jump)
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ') {
+          e.preventDefault()
+        }
         
         setKeys(prev => ({
           ...prev,
-          [e.key === ' ' ? 'Space' : e.key]: true
+          [mappedKey]: true
         }))
       }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+      const keyMap: { [key: string]: keyof Keys } = {
+        'ArrowUp': 'ArrowUp',
+        'ArrowDown': 'ArrowDown',
+        'ArrowLeft': 'ArrowLeft',
+        'ArrowRight': 'ArrowRight',
+        ' ': 'Space',
+        'e': 'KeyE',
+        'E': 'KeyE'
+      }
+      const mappedKey = keyMap[e.key]
+
+      if (mappedKey) {
         setKeys(prev => ({
           ...prev,
-          [e.key === ' ' ? 'Space' : e.key]: false
+          [mappedKey]: false
         }))
       }
     }

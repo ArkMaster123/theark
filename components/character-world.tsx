@@ -18,6 +18,11 @@ export default function CharacterWorld() {
   const [, setRenderTrigger] = useState<number>(0) // Used to force re-renders on AI state changes
   const animationRef = useRef<number>(0)
   const lastTimeRef = useRef<number>(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [transitionAlpha, setTransitionAlpha] = useState(0)
+  const [transitionTarget, setTransitionTarget] = useState<{ roomIndex: number, entryPointKey: string } | null>(null)
+
+  const TRANSITION_SPEED = 0.05 // Speed of the fade effect
   
   // Load world environment
   useEffect(() => {
@@ -117,6 +122,51 @@ export default function CharacterWorld() {
       
       // Clear canvas
       ctx.clearRect(0, 0, dimensions.width, dimensions.height)
+
+      // Handle transition effects
+      if (isTransitioning || transitionAlpha > 0) {
+        if (transitionTarget) { // Fading out
+          setTransitionAlpha(alpha => {
+            const newAlpha = Math.min(1, alpha + TRANSITION_SPEED)
+            if (newAlpha >= 1) {
+              // Perform room change
+              worldEnvironment.loadRoom(transitionTarget.roomIndex)
+              const newRoom = worldEnvironment.rooms[worldEnvironment.currentRoomIndex]
+              const entryPoint = newRoom.entryPoints[transitionTarget.entryPointKey]
+              
+              if (entryPoint) {
+                garyCharacter.position = { x: entryPoint.x, y: entryPoint.y }
+              } else {
+                // Default to a fallback position if entry point is not found
+                garyCharacter.position = { x: worldEnvironment.tileSize * 2, y: worldEnvironment.tileSize * 2 }
+                console.warn(`Entry point ${transitionTarget.entryPointKey} not found in room ${worldEnvironment.currentRoomIndex}. Defaulting position.`)
+              }
+              
+              // Immediately update viewport to the new room and character position
+              const newViewportX = garyCharacter.position.x - dimensions.width / 2 + garyCharacter.frameWidth * garyCharacter.scale / 2
+              const newViewportY = garyCharacter.position.y - dimensions.height / 2 + garyCharacter.frameHeight * garyCharacter.scale / 2
+              
+              const worldWidthImmediate = worldEnvironment.mapWidth * worldEnvironment.tileSize
+              const worldHeightImmediate = worldEnvironment.mapHeight * worldEnvironment.tileSize
+              
+              const clampedNewViewportX = Math.max(0, Math.min(worldWidthImmediate - dimensions.width, newViewportX))
+              const clampedNewViewportY = Math.max(0, Math.min(worldHeightImmediate - dimensions.height, newViewportY))
+              setViewportOffset({ x: clampedNewViewportX, y: clampedNewViewportY })
+
+              setTransitionTarget(null) // Clear target, start fade-in
+            }
+            return newAlpha
+          })
+        } else { // Fading in
+          setTransitionAlpha(alpha => {
+            const newAlpha = Math.max(0, alpha - TRANSITION_SPEED)
+            if (newAlpha <= 0) {
+              setIsTransitioning(false)
+            }
+            return newAlpha
+          })
+        }
+      }
       
       // Update gary character based on keyboard input
       const direction = { x: 0, y: 0 }
@@ -130,23 +180,54 @@ export default function CharacterWorld() {
       const worldWidth = worldEnvironment.mapWidth * worldEnvironment.tileSize
       const worldHeight = worldEnvironment.mapHeight * worldEnvironment.tileSize
       
-      // Update Orb's AI
-      if (orbAI) {
+      // Door interaction logic
+      if (!isTransitioning && keys.KeyE) {
+        for (const decoration of worldEnvironment.decorations) {
+          if (decoration.isDoor && decoration.targetRoomIndex !== undefined && decoration.targetEntryPointKey) {
+            const doorBounds = decoration.getBounds() // World coordinates
+            const garyBounds = {
+              x: garyCharacter.position.x,
+              y: garyCharacter.position.y,
+              width: garyCharacter.frameWidth * garyCharacter.scale,
+              height: garyCharacter.frameHeight * garyCharacter.scale
+            }
+
+            // Simple AABB collision check for proximity
+            if (
+              garyBounds.x < doorBounds.x + doorBounds.width &&
+              garyBounds.x + garyBounds.width > doorBounds.x &&
+              garyBounds.y < doorBounds.y + doorBounds.height &&
+              garyBounds.y + garyBounds.height > doorBounds.y
+            ) {
+              setIsTransitioning(true)
+              setTransitionTarget({ roomIndex: decoration.targetRoomIndex, entryPointKey: decoration.targetEntryPointKey })
+              // Consume the key press
+              keys.KeyE = false 
+              break // Interact with one door at a time
+            }
+          }
+        }
+      }
+      
+      // Update Orb's AI (only if not transitioning)
+      if (orbAI && !isTransitioning) {
         orbAI.update(deltaTime)
       }
       
-      // Update characters with world environment
-      garyCharacter.update(
-        direction, 
-        deltaTime, 
-        { width: worldWidth, height: worldHeight }, 
-        [orbCharacter],
-        worldEnvironment,
-        viewportOffset
-      )
+      // Update characters with world environment (only if not transitioning)
+      if (!isTransitioning) {
+        garyCharacter.update(
+          direction, 
+          deltaTime, 
+          { width: worldWidth, height: worldHeight }, 
+          [orbCharacter],
+          worldEnvironment,
+          viewportOffset
+        )
+      }
       
-      // Update Orb only if AI isn't handling it
-      if (!orbAI) {
+      // Update Orb only if AI isn't handling it and not transitioning
+      if (!orbAI && !isTransitioning) {
         orbCharacter.update(
           { x: 0, y: 0 }, 
           deltaTime, 
@@ -157,19 +238,21 @@ export default function CharacterWorld() {
         )
       }
       
-      // Update viewport to follow Gary character
-      const targetViewportX = garyCharacter.position.x - dimensions.width / 2 + garyCharacter.frameWidth * garyCharacter.scale / 2
-      const targetViewportY = garyCharacter.position.y - dimensions.height / 2 + garyCharacter.frameHeight * garyCharacter.scale / 2
-      
-      // Clamp viewport to world boundaries
-      const clampedViewportX = Math.max(0, Math.min(worldWidth - dimensions.width, targetViewportX))
-      const clampedViewportY = Math.max(0, Math.min(worldHeight - dimensions.height, targetViewportY))
-      
-      // Smooth camera movement
-      setViewportOffset(prev => ({
-        x: prev.x + (clampedViewportX - prev.x) * 0.1,
-        y: prev.y + (clampedViewportY - prev.y) * 0.1
-      }))
+      // Update viewport to follow Gary character (only if not transitioning)
+      if (!isTransitioning) {
+        const targetViewportX = garyCharacter.position.x - dimensions.width / 2 + garyCharacter.frameWidth * garyCharacter.scale / 2
+        const targetViewportY = garyCharacter.position.y - dimensions.height / 2 + garyCharacter.frameHeight * garyCharacter.scale / 2
+        
+        // Clamp viewport to world boundaries
+        const clampedViewportX = Math.max(0, Math.min(worldWidth - dimensions.width, targetViewportX))
+        const clampedViewportY = Math.max(0, Math.min(worldHeight - dimensions.height, targetViewportY))
+        
+        // Smooth camera movement
+        setViewportOffset(prev => ({
+          x: prev.x + (clampedViewportX - prev.x) * 0.1,
+          y: prev.y + (clampedViewportY - prev.y) * 0.1
+        }))
+      }
       
       // Render world environment with viewport offset
       worldEnvironment.render(ctx, viewportOffset.x, viewportOffset.y, dimensions.width, dimensions.height)
@@ -203,28 +286,56 @@ export default function CharacterWorld() {
       orbCharacter.position = { x: orbScreenX + viewportOffset.x, y: orbScreenY + viewportOffset.y }
       
       // Draw instructions on canvas
-      if (!garyCharacter.isCloseTo(orbCharacter)) {
-        ctx.font = '18px Arial'
-        ctx.fillStyle = 'white'
-        ctx.textAlign = 'center'
-        ctx.fillText(
-          'Use arrow keys to move Gary close to Orb',
-          dimensions.width / 2,
-          dimensions.height - 30
-        )
-      } else if (!garyCharacter.isGreeting && !orbCharacter.isGreeting) {
-        ctx.font = '18px Arial'
-        ctx.fillStyle = 'yellow'
-        ctx.textAlign = 'center'
-        ctx.fillText(
-          'Press SPACE to greet!',
-          dimensions.width / 2,
-          dimensions.height - 30
-        )
+      if (!isTransitioning) {
+        let instructionText = ''
+        // Check for door proximity
+        let nearDoor = false
+        for (const decoration of worldEnvironment.decorations) {
+          if (decoration.isDoor) {
+            const doorBounds = decoration.getBounds()
+            const garyBounds = {
+              x: garyCharacter.position.x,
+              y: garyCharacter.position.y,
+              width: garyCharacter.frameWidth * garyCharacter.scale,
+              height: garyCharacter.frameHeight * garyCharacter.scale
+            }
+            if (
+              garyBounds.x < doorBounds.x + doorBounds.width &&
+              garyBounds.x + garyBounds.width > doorBounds.x &&
+              garyBounds.y < doorBounds.y + doorBounds.height &&
+              garyBounds.y + garyBounds.height > doorBounds.y
+            ) {
+              nearDoor = true
+              instructionText = 'Press E to enter'
+              break
+            }
+          }
+        }
+
+        if (!nearDoor) {
+          if (!garyCharacter.isCloseTo(orbCharacter)) {
+            instructionText = 'Use arrow keys to move Gary. Explore!'
+          } else if (!garyCharacter.isGreeting && !orbCharacter.isGreeting) {
+            instructionText = 'Press SPACE to greet Orb!'
+          }
+        }
+        
+        if (instructionText) {
+          ctx.font = '18px Arial'
+          ctx.fillStyle = nearDoor ? 'cyan' : (garyCharacter.isCloseTo(orbCharacter) ? 'yellow' : 'white')
+          ctx.textAlign = 'center'
+          ctx.fillText(instructionText, dimensions.width / 2, dimensions.height - 30)
+        }
       }
       
       // Draw minimap
       drawMinimap(ctx, worldWidth, worldHeight, dimensions)
+
+      // Draw transition overlay
+      if (transitionAlpha > 0) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`
+        ctx.fillRect(0, 0, dimensions.width, dimensions.height)
+      }
       
       animationRef.current = requestAnimationFrame(gameLoop)
     }
