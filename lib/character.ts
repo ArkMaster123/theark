@@ -201,6 +201,14 @@ export class Character {
       height: scaledHeight * 0.3
     }
     
+    // FREEDOM MODE: Skip all collision checks for Gary!
+    if (this.name === 'Gary') {
+      // Update position with no restrictions - Gary is free!
+      this.position = newPosition;
+      return;
+    }
+    
+    // For other characters, still apply normal collision rules
     // Check collision with other characters
     const hasCharacterCollision = this.checkCollisions(collisionBounds, otherCharacters)
     
@@ -214,7 +222,11 @@ export class Character {
       // Check if all corners of the collision box are on walkable tiles
       const bottomLeftWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x, worldY + collisionBounds.y + collisionBounds.height)
       const bottomRightWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x + collisionBounds.width, worldY + collisionBounds.y + collisionBounds.height)
-      const isOnWalkableTile = bottomLeftWalkable && bottomRightWalkable
+      const centerBottomWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x + (collisionBounds.width/2), worldY + collisionBounds.y + collisionBounds.height)
+      const centerWalkable = worldEnvironment.isWalkable(worldX + collisionBounds.x + (collisionBounds.width/2), worldY + collisionBounds.y + (collisionBounds.height/2))
+      
+      // Consider a tile walkable if center point OR either bottom corners are walkable
+      const isOnWalkableTile = centerWalkable || centerBottomWalkable || (bottomLeftWalkable && bottomRightWalkable)
       
       // Adjust world coordinates for decoration collision
       const worldCollisionBounds = {

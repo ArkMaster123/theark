@@ -100,7 +100,7 @@ export class WorldEnvironment {
     this.backgroundImage = null
     this.backgroundLoaded = false
     
-    // Initialize empty tile grid
+    // Initialize empty tile grid and ensure all grass tiles are walkable
     for (let y = 0; y < height; y++) {
       this.tiles[y] = []
       for (let x = 0; x < width; x++) {
@@ -111,7 +111,7 @@ export class WorldEnvironment {
           y: y * tileSize,
           width: tileSize,
           height: tileSize,
-          walkable: true
+          walkable: true  // Ensure grass is walkable
         }
       }
     }
@@ -307,6 +307,16 @@ export class WorldEnvironment {
     // Vertical path 
     this.createTileArea(12, 10, 1, 10, TileType.PATH)
     
+    // Add more paths to allow better navigation
+    // Bottom horizontal path
+    this.createTileArea(12, 20, 10, 1, TileType.PATH)
+    // Right vertical path
+    this.createTileArea(22, 10, 1, 10, TileType.PATH)
+    // Bottom-right connector
+    this.createTileArea(18, 15, 4, 1, TileType.PATH)
+    // Bottom-left connector
+    this.createTileArea(8, 15, 4, 1, TileType.PATH)
+    
     // Add a larger farming area
     this.createTileArea(15, 5, 4, 3, TileType.FARMLAND)
     
@@ -372,8 +382,8 @@ export class WorldEnvironment {
     // Chest
     this.addDecoration(new Decoration({
       type: 'chest',
-      x: 650,
-      y: 400,
+      x: 760,  // Move to a position on land near the house
+      y: 480,  // Move to a position on land near the path
       width: 32,
       height: 32,
       imagePath: '/images/assets/Outdoor decoration/Chest.png',
