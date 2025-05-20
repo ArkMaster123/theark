@@ -1,16 +1,37 @@
+"use client"
+
 import Image from "next/image"
+import dynamic from "next/dynamic"
 import { WaitlistForm } from "@/components/waitlist-form"
-import { PixelatedStars } from "@/components/pixelated-stars"
 import { PixelatedCharacters } from "@/components/pixelated-characters"
 import { GlowingWindows } from "@/components/glowing-windows"
 import { Header } from "@/components/header"
 import { AboutSection } from "@/components/about-section"
-import { FallingPixels } from "@/components/falling-pixels"
 import { InteractiveFeatures } from "@/components/interactive-features"
+
+// Dynamically import components with SSR disabled
+const PixelatedStars = dynamic(() => import("@/components/pixelated-stars").then(mod => mod.PixelatedStars), {
+  ssr: false
+})
+
+const FallingPixels = dynamic(() => import("@/components/falling-pixels").then(mod => mod.FallingPixels), {
+  ssr: false
+})
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0D1B33] text-[#F8E8BE] font-pixel overflow-hidden">
+      {/* Add a prominent link to the character world at the top of the page */}
+      <div className="fixed top-4 right-4 z-50">
+        <a 
+          href="/home" 
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all"
+        >
+          <span>Enter Character World</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+      </div>
+
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <PixelatedStars />
@@ -58,9 +79,7 @@ export default function Home() {
       {/* Waitlist Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-3xl md:text-4xl font-pixel text-[#F8E8BE] mb-8 text-center">Join the Waitlist</h2>
-            <p className="text-center mb-8">Be among the first to explore this magical world of AI agents.</p>
+          <div className="max-w-3xl mx-auto">
             <WaitlistForm />
           </div>
         </div>

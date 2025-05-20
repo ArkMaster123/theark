@@ -1,3 +1,5 @@
+"use client"
+
 export function PixelatedStars() {
   // Generate an array of stars with random positions
   const stars = Array.from({ length: 30 }, (_, i) => {

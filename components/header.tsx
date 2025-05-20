@@ -71,6 +71,13 @@ export function Header() {
             >
               Agents
             </Link>
+            <Link href="/login">
+              <Button
+                className="bg-transparent hover:bg-[#142237] text-[#F8E8BE] border border-[#F8E8BE] hover:text-[#FFD86E] font-pixel transition-all hover:scale-105 pixel-button"
+              >
+                Log In
+              </Button>
+            </Link>
             <Button
               className="bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33] font-pixel transition-all hover:scale-105 pixel-button"
               onClick={() => scrollToSection("waitlist")}
@@ -117,6 +124,14 @@ export function Header() {
               }}
             >
               Agents
+            </Link>
+            <Link href="/login">
+              <Button
+                className="bg-transparent hover:bg-[#142237] text-[#F8E8BE] border border-[#F8E8BE] hover:text-[#FFD86E] font-pixel transition-all hover:scale-105 pixel-button w-full"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Log In
+              </Button>
             </Link>
             <Button
               className="bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33] font-pixel transition-all hover:scale-105 pixel-button w-full"
