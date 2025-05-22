@@ -49,17 +49,17 @@ export function Header() {
                 scrollToSection("about")
               }}
             >
-              About
+              Features
             </Link>
             <Link
-              href="#features"
+              href="#aboutUs"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
               onClick={(e) => {
                 e.preventDefault()
-                scrollToSection("features")
+                scrollToSection("aboutUs")
               }}
             >
-              Features
+              About Us
             </Link>
             <Link
               href="#agents"
@@ -103,17 +103,17 @@ export function Header() {
                 scrollToSection("about", () => setIsMobileMenuOpen(false))
               }}
             >
-              About
+              Features
             </Link>
             <Link
-              href="#features"
+              href="#aboutUs"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
               onClick={(e) => {
                 e.preventDefault()
-                scrollToSection("features", () => setIsMobileMenuOpen(false))
+                scrollToSection("aboutUs", () => setIsMobileMenuOpen(false))
               }}
             >
-              Features
+              About Us
             </Link>
             <Link
               href="#agents"

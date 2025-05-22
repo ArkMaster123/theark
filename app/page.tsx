@@ -7,7 +7,9 @@ import { PixelatedCharacters } from "@/components/pixelated-characters"
 import { GlowingWindows } from "@/components/glowing-windows"
 import { Header } from "@/components/header"
 import { AboutSection } from "@/components/about-section"
+import { AboutUsSection } from "@/components/about-us-section"
 import { InteractiveFeatures } from "@/components/interactive-features"
+import Link from "next/link"
 
 // Dynamically import components with SSR disabled
 const PixelatedStars = dynamic(() => import("@/components/pixelated-stars").then(mod => mod.PixelatedStars), {
@@ -56,6 +58,9 @@ export default function Home() {
       {/* About Section */}
       <AboutSection />
 
+      {/* About Us Section */}
+      <AboutUsSection />
+
       {/* Interactive Features */}
       <section className="py-16 px-4 bg-[#0A1628]">
         <div className="container mx-auto max-w-6xl">
@@ -88,6 +93,14 @@ export default function Home() {
             <a href="#" className="hover:text-[#FFD86E] transition-colors">
               GitHub
             </a>
+          </div>
+          <div className="flex justify-center gap-6 mb-4">
+            <Link href="/terms-of-service" className="hover:text-[#FFD86E] transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/privacy-policy" className="hover:text-[#FFD86E] transition-colors">
+              Privacy Policy
+            </Link>
           </div>
           <p className="text-sm">© 2025 TH3 ARK</p>
         </div>

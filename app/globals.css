@@ -76,6 +76,24 @@ body {
   box-shadow: 4px 4px 0px #0a1628;
 }
 
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0a1628;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #263A5A;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #FFD86E;
+}
+
 /* Floating animations */
 @keyframes float-slow {
   0%,
