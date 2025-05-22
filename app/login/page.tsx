@@ -85,7 +85,7 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-[#F8E8BE]">Password</Label>
                 <div className="relative">
                   <Input 
-                    id="password"
+                    id="password" 
                     name="password"
                     type={showPassword ? "text" : "password"} 
                     placeholder="Enter your password"

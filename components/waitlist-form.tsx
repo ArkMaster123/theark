@@ -28,7 +28,9 @@ const cardVariants: Variants = {
 export function WaitlistForm() {
   // Use refs instead of state for input values to avoid re-renders
   const agentEmailRef = useRef<HTMLInputElement>(null);
+  const agentNameRef = useRef<HTMLInputElement>(null);
   const navigatorEmailRef = useRef<HTMLInputElement>(null);
+  const navigatorNameRef = useRef<HTMLInputElement>(null);
   const businessEmailRef = useRef<HTMLInputElement>(null);
   const companyNameRef = useRef<HTMLInputElement>(null);
   
@@ -37,11 +39,26 @@ export function WaitlistForm() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
+  // Card flip states
+  const [flippedCards, setFlippedCards] = useState<Record<Intent, boolean>>({
+    vibe_coder_agent: false,
+    navigator: false,
+    business_partner: false
+  })
+  
   // Modal state and temp data storage
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [tempEmail, setTempEmail] = useState("")
   const [tempIntent, setTempIntent] = useState<Intent | null>(null)
   const [tempCompanyName, setTempCompanyName] = useState("")
+  const [tempName, setTempName] = useState("")
+
+  const flipCard = (intent: Intent) => {
+    setFlippedCards(prev => ({
+      ...prev,
+      [intent]: !prev[intent]
+    }))
+  }
 
   const openSourceModal = (intent: Intent) => {
     // Get current value from ref
@@ -54,6 +71,22 @@ export function WaitlistForm() {
     if (!email) {
       toast({ title: "Email Required", description: "Please enter your email address.", variant: "destructive" });
       return;
+    }
+    
+    // Get name for vibe_coder_agent and navigator
+    let name = "";
+    if (intent === 'vibe_coder_agent') {
+      name = agentNameRef.current?.value || "";
+      if (!name) {
+        toast({ title: "Name Required", description: "Please enter your name.", variant: "destructive" });
+        return;
+      }
+    } else if (intent === 'navigator') {
+      name = navigatorNameRef.current?.value || "";
+      if (!name) {
+        toast({ title: "Name Required", description: "Please enter your name.", variant: "destructive" });
+        return;
+      }
     }
     
     // For business partners, check company name
@@ -71,6 +104,7 @@ export function WaitlistForm() {
     // Store data temporarily and open modal
     setTempEmail(email)
     setTempIntent(intent)
+    setTempName(name)
     setIsModalOpen(true)
   }
 
@@ -108,6 +142,11 @@ export function WaitlistForm() {
         date: timestamp.split('T')[0]
       };
       
+      // Add name for vibe_coder_agent and navigator
+      if ((tempIntent === 'vibe_coder_agent' || tempIntent === 'navigator') && tempName) {
+        payload.name = tempName;
+      }
+      
       // Add company name for business partners
       if (tempIntent === 'business_partner' && tempCompanyName) {
         payload.companyName = tempCompanyName;
@@ -129,7 +168,9 @@ export function WaitlistForm() {
         })
         // Clear input fields after successful submission
         if (agentEmailRef.current) agentEmailRef.current.value = "";
+        if (agentNameRef.current) agentNameRef.current.value = "";
         if (navigatorEmailRef.current) navigatorEmailRef.current.value = "";
+        if (navigatorNameRef.current) navigatorNameRef.current.value = "";
         if (businessEmailRef.current) businessEmailRef.current.value = "";
         if (companyNameRef.current) companyNameRef.current.value = "";
       } else {
@@ -170,6 +211,7 @@ export function WaitlistForm() {
       setTempEmail("")
       setTempIntent(null)
       setTempCompanyName("")
+      setTempName("")
     }
   }
 
@@ -208,7 +250,7 @@ export function WaitlistForm() {
       )}
       
       <motion.div 
-        className="flex flex-col md:flex-row gap-8 justify-center items-stretch flex-wrap"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -216,132 +258,259 @@ export function WaitlistForm() {
         {/* Vibe Coder Agent Card */}
         <motion.div
           key="vibe_coder_agent_card"
-          className="flex-1 w-full md:w-[calc(33%-1rem)] bg-[#0A1628] p-6 border-2 border-[#F8E8BE] pixel-border flex flex-col justify-between space-y-4 min-w-[300px]"
+          className="w-full max-w-[400px] h-[360px] perspective-1000"
           variants={cardVariants}
           transition={{ duration: 0.5 }}
         >
-          <div>
-            <h3 className="text-2xl font-pixel text-[#FFD86E] mb-3 text-center">Vibe Coder Agent</h3>
-            <p className="text-sm text-[#F8E8BE]/80 mb-4 text-center">Got an AI agent to share? Or an idea for one? Join us to build the future of TH3 ARK.</p>
+          <div 
+            className={`card-flip-container ${
+              flippedCards.vibe_coder_agent ? 'rotate-y-180' : ''
+            }`}
+          >
+            {/* Front of card */}
+            <div className="card-face bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border flex flex-col items-center justify-between p-8 card-pattern-agent">
+              <div className="flex-1 flex items-center">
+                <h3 className="text-xl font-pixel text-[#FFD86E] text-center leading-tight">Vibe Coder<br/>Agent</h3>
+              </div>
+              <Button
+                type="button"
+                onClick={() => flipCard('vibe_coder_agent')}
+                className="w-full max-w-[200px] mx-auto font-pixel py-3 px-2 text-xs transition-all hover:scale-105 pixel-button bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33] text-center leading-tight"
+              >
+                Submit Agent
+              </Button>
+            </div>
             
-            {/* Non-animated input area */}
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="vibe_coder_agent-email" className="text-[#F8E8BE] font-pixel">
-                Your Email <span className="text-[#FFD86E]">*</span>
-              </Label>
-              <Input
-                id="vibe_coder_agent-email"
-                type="email"
-                placeholder="your@email.com"
-                required
-                ref={agentEmailRef}
-                className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input"
-                disabled={isSubmitting}
-              />
+            {/* Back of card */}
+            <div className="card-face card-face-back bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border p-4 card-pattern-agent grid grid-rows-[auto_1fr_auto] h-full">
+              <div className="grid-row-start-1">
+                <h3 className="text-sm font-pixel text-[#FFD86E] mb-2 text-center">Vibe Coder Agent</h3>
+                <p className="text-xs text-[#F8E8BE]/80 mb-4 text-center leading-tight">Got an AI agent idea? Build the future with us.</p>
+              </div>
+              
+              <div className="grid-row-start-2 space-y-3">
+                <div>
+                  <Label htmlFor="vibe_coder_agent-name" className="text-[#F8E8BE] font-pixel text-xs block mb-1">
+                    Name <span className="text-[#FFD86E]">*</span>
+                  </Label>
+                  <Input
+                    id="vibe_coder_agent-name"
+                    type="text"
+                    placeholder="Your Name"
+                    required
+                    ref={agentNameRef}
+                    className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input text-xs h-8 w-full"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="vibe_coder_agent-email" className="text-[#F8E8BE] font-pixel text-xs block mb-1">
+                    Email <span className="text-[#FFD86E]">*</span>
+                  </Label>
+                  <Input
+                    id="vibe_coder_agent-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    required
+                    ref={agentEmailRef}
+                    className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input text-xs h-8 w-full"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid-row-start-3 space-y-2 self-end">
+                <Button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => openSourceModal('vibe_coder_agent')}
+                  className="w-full font-pixel py-2 text-xs transition-all hover:scale-105 pixel-button bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33] h-8"
+                >
+                  {isSubmitting && submittingIntent === 'vibe_coder_agent' ? "Coding..." : "Submit"}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => flipCard('vibe_coder_agent')}
+                  className="w-full font-pixel py-2 text-xs transition-all hover:scale-105 pixel-button bg-transparent border border-[#F8E8BE] text-[#F8E8BE] hover:bg-[#142237] h-8"
+                >
+                  ← Back
+                </Button>
+              </div>
             </div>
           </div>
-          
-          <Button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => openSourceModal('vibe_coder_agent')}
-            className="w-full font-pixel py-3 text-lg transition-all hover:scale-105 pixel-button bg-[#FFD86E] hover:bg-[#FFE898] text-[#0D1B33]"
-          >
-            {isSubmitting && submittingIntent === 'vibe_coder_agent' ? "Coding Your Entry..." : "Submit your Agent"}
-          </Button>
         </motion.div>
         
         {/* Navigator Card */}
         <motion.div
           key="navigator_card"
-          className="flex-1 w-full md:w-[calc(33%-1rem)] bg-[#0A1628] p-6 border-2 border-[#F8E8BE] pixel-border flex flex-col justify-between space-y-4 min-w-[300px]"
+          className="w-full max-w-[400px] h-[360px] perspective-1000"
           variants={cardVariants}
           transition={{ duration: 0.5 }}
         >
-          <div>
-            <h3 className="text-2xl font-pixel text-[#FFD86E] mb-3 text-center">Navigator</h3>
-            <p className="text-sm text-[#F8E8BE]/80 mb-4 text-center">Ready to explore TH3 ARK and interact with a universe of AI agents? Sign up for early access.</p>
+          <div 
+            className={`card-flip-container ${
+              flippedCards.navigator ? 'rotate-y-180' : ''
+            }`}
+          >
+            {/* Front of card */}
+            <div className="card-face bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border flex flex-col items-center justify-between p-8 card-pattern-navigator">
+              <div className="flex-1 flex items-center">
+                <h3 className="text-xl font-pixel text-[#FFD86E] text-center">Navigator</h3>
+              </div>
+              <Button
+                type="button"
+                onClick={() => flipCard('navigator')}
+                className="w-full max-w-[200px] mx-auto font-pixel py-3 px-2 text-xs transition-all hover:scale-105 pixel-button bg-[#5D4777] hover:bg-[#6D57A7] text-[#F8E8BE] text-center leading-tight"
+              >
+                Navigate
+              </Button>
+            </div>
             
-            {/* Non-animated input area */}
-            <div className="space-y-2 mb-4">
-              <Label htmlFor="navigator-email" className="text-[#F8E8BE] font-pixel">
-                Your Email <span className="text-[#FFD86E]">*</span>
-              </Label>
-              <Input
-                id="navigator-email"
-                type="email"
-                placeholder="your@email.com"
-                required
-                ref={navigatorEmailRef}
-                className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input"
-                disabled={isSubmitting}
-              />
+            {/* Back of card */}
+            <div className="card-face card-face-back bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border p-4 card-pattern-navigator grid grid-rows-[auto_1fr_auto] h-full">
+              <div className="grid-row-start-1">
+                <h3 className="text-sm font-pixel text-[#FFD86E] mb-2 text-center">Navigator</h3>
+                <p className="text-xs text-[#F8E8BE]/80 mb-4 text-center leading-tight">Ready to explore TH3 ARK? Join early access.</p>
+              </div>
+              
+              <div className="grid-row-start-2 space-y-3 mt-5">
+                <div>
+                  <Label htmlFor="navigator-name" className="text-[#F8E8BE] font-pixel text-xs block mb-1">
+                    Name <span className="text-[#FFD86E]">*</span>
+                  </Label>
+                  <Input
+                    id="navigator-name"
+                    type="text"
+                    placeholder="Your Name"
+                    required
+                    ref={navigatorNameRef}
+                    className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input text-xs h-8 w-full"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="navigator-email" className="text-[#F8E8BE] font-pixel text-xs block mb-1">
+                    Email <span className="text-[#FFD86E]">*</span>
+                  </Label>
+                  <Input
+                    id="navigator-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    required
+                    ref={navigatorEmailRef}
+                    className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input text-xs h-8 w-full"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid-row-start-3 space-y-2 self-end">
+                <Button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => openSourceModal('navigator')}
+                  className="w-full font-pixel py-2 text-xs transition-all hover:scale-105 pixel-button bg-[#5D4777] hover:bg-[#6D57A7] text-[#F8E8BE] h-8"
+                >
+                  {isSubmitting && submittingIntent === 'navigator' ? "Charting..." : "Submit"}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => flipCard('navigator')}
+                  className="w-full font-pixel py-2 text-xs transition-all hover:scale-105 pixel-button bg-transparent border border-[#F8E8BE] text-[#F8E8BE] hover:bg-[#142237] h-8"
+                >
+                  ← Back
+                </Button>
+              </div>
             </div>
           </div>
-          
-          <Button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => openSourceModal('navigator')}
-            className="w-full font-pixel py-3 text-lg transition-all hover:scale-105 pixel-button bg-[#5D4777] hover:bg-[#6D57A7] text-[#F8E8BE]"
-          >
-            {isSubmitting && submittingIntent === 'navigator' ? "Charting Your Course..." : "Start Navigating"}
-          </Button>
         </motion.div>
         
         {/* Business Partner Card */}
         <motion.div
           key="business_partner_card"
-          className="flex-1 w-full md:w-[calc(33%-1rem)] bg-[#0A1628] p-6 border-2 border-[#F8E8BE] pixel-border flex flex-col justify-between space-y-4 min-w-[300px]"
+          className="w-full max-w-[400px] h-[360px] perspective-1000"
           variants={cardVariants}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div>
-            <h3 className="text-2xl font-pixel text-[#FFD86E] mb-3 text-center">Business Partner</h3>
-            <p className="text-sm text-[#F8E8BE]/80 mb-4 text-center">Want to reach our growing community of AI enthusiasts? Get your business in front of thousands of engaged users in TH3 ARK.</p>
+          <div 
+            className={`card-flip-container ${
+              flippedCards.business_partner ? 'rotate-y-180' : ''
+            }`}
+          >
+            {/* Front of card */}
+            <div className="card-face bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border flex flex-col items-center justify-between p-8 card-pattern-business">
+              <div className="flex-1 flex items-center">
+                <h3 className="text-xl font-pixel text-[#FFD86E] text-center leading-tight">Business<br/>Partner</h3>
+              </div>
+              <Button
+                type="button"
+                onClick={() => flipCard('business_partner')}
+                className="w-full max-w-[200px] mx-auto font-pixel py-3 px-2 text-xs transition-all hover:scale-105 pixel-button bg-[#247BA0] hover:bg-[#35A1CD] text-[#F8E8BE] text-center leading-tight"
+              >
+                Partner
+              </Button>
+            </div>
             
-            {/* Input area */}
-            <div className="space-y-4 mb-4">
-              <div>
-                <Label htmlFor="company-name" className="text-[#F8E8BE] font-pixel">
-                  Company Name <span className="text-[#FFD86E]">*</span>
-                </Label>
-                <Input
-                  id="company-name"
-                  type="text"
-                  placeholder="Your Company"
-                  required
-                  ref={companyNameRef}
-                  className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input"
-                  disabled={isSubmitting}
-                />
+            {/* Back of card */}
+            <div className="card-face card-face-back bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border p-4 card-pattern-business grid grid-rows-[auto_1fr_auto] h-full">
+              <div className="grid-row-start-1">
+                <h3 className="text-sm font-pixel text-[#FFD86E] mb-2 text-center">Business Partner</h3>
+                <p className="text-xs text-[#F8E8BE]/80 mb-4 text-center leading-tight">Reach thousands of AI enthusiasts in TH3 ARK.</p>
               </div>
               
-              <div>
-                <Label htmlFor="business-email" className="text-[#F8E8BE] font-pixel">
-                  Your Email <span className="text-[#FFD86E]">*</span>
-                </Label>
-                <Input
-                  id="business-email"
-                  type="email"
-                  placeholder="your@email.com"
-                  required
-                  ref={businessEmailRef}
-                  className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input"
+              <div className="grid-row-start-2 space-y-3">
+                <div>
+                  <Label htmlFor="company-name" className="text-[#F8E8BE] font-pixel text-xs block mb-1">
+                    Company <span className="text-[#FFD86E]">*</span>
+                  </Label>
+                  <Input
+                    id="company-name"
+                    type="text"
+                    placeholder="Your Company"
+                    required
+                    ref={companyNameRef}
+                    className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input text-xs h-8 w-full"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="business-email" className="text-[#F8E8BE] font-pixel text-xs block mb-1">
+                    Email <span className="text-[#FFD86E]">*</span>
+                  </Label>
+                  <Input
+                    id="business-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    required
+                    ref={businessEmailRef}
+                    className="bg-[#0D1B33] border-2 border-[#F8E8BE] text-[#F8E8BE] placeholder:text-[#F8E8BE]/50 font-pixel pixel-input text-xs h-8 w-full"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid-row-start-3 space-y-2 self-end">
+                <Button
+                  type="button"
                   disabled={isSubmitting}
-                />
+                  onClick={() => openSourceModal('business_partner')}
+                  className="w-full font-pixel py-2 text-xs transition-all hover:scale-105 pixel-button bg-[#247BA0] hover:bg-[#35A1CD] text-[#F8E8BE] h-8"
+                >
+                  {isSubmitting && submittingIntent === 'business_partner' ? "Securing..." : "Submit"}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => flipCard('business_partner')}
+                  className="w-full font-pixel py-2 text-xs transition-all hover:scale-105 pixel-button bg-transparent border border-[#F8E8BE] text-[#F8E8BE] hover:bg-[#142237] h-8"
+                >
+                  ← Back
+                </Button>
               </div>
             </div>
           </div>
-          
-          <Button
-            type="button"
-            disabled={isSubmitting}
-            onClick={() => openSourceModal('business_partner')}
-            className="w-full font-pixel py-3 text-lg transition-all hover:scale-105 pixel-button bg-[#247BA0] hover:bg-[#35A1CD] text-[#F8E8BE]"
-          >
-            {isSubmitting && submittingIntent === 'business_partner' ? "Securing Partnership..." : "Partner with Us"}
-          </Button>
         </motion.div>
       </motion.div>
       

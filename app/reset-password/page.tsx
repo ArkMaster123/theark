@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
   }
   
   return (
-    <div className="min-h-screen bg-[#0D1B33] text-[#F8E8BE] font-pixel overflow-hidden">
+    <div className="min-h-screen bg-[#0D1B33] text-[#F8E8BE] font-readable overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <LoginStars />

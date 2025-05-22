@@ -22,7 +22,7 @@ const FallingPixels = dynamic(() => import("@/components/falling-pixels").then(m
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0D1B33] text-[#F8E8BE] font-pixel overflow-hidden">
+    <div className="min-h-screen bg-[#0D1B33] text-[#F8E8BE] font-readable overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <PixelatedStars />
@@ -80,7 +80,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 text-center text-[#F8E8BE]/70 bg-[#0A1628]">
+      <footer className="py-8 px-4 text-center text-[#F8E8BE]/70 bg-[#0A1628] font-pixel">
         <div className="container mx-auto max-w-6xl">
           <p className="mb-4">© 2025 TH3 ARK. All rights reserved.</p>
           <div className="flex justify-center gap-6 mb-4">

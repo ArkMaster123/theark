@@ -10,6 +10,9 @@
   font-display: swap;
 }
 
+/* Import Inter font for better readability */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
   --background: #0d1b33;
   --foreground: #f8e8be;
@@ -34,13 +37,24 @@
 }
 
 body {
-  font-family: "PixelFont", monospace;
+  /* Use Inter as the default font for better readability */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--background);
   color: var(--foreground);
   image-rendering: pixelated;
 }
 
 .font-pixel {
+  font-family: "PixelFont", monospace;
+}
+
+/* Add class for readable body text */
+.font-readable {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Ensure headers use pixel font by default */
+h1, h2, h3, h4, h5, h6 {
   font-family: "PixelFont", monospace;
 }
 
@@ -92,6 +106,75 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #FFD86E;
+}
+
+/* 3D Card Flip Effects */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.card-flip-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s;
+  transform-origin: center center;
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-face-back {
+  transform: rotateY(180deg);
+}
+
+/* Card Back Patterns - Playing Card Style */
+.card-pattern-agent {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 216, 110, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(255, 216, 110, 0.1) 2px, transparent 2px),
+    linear-gradient(45deg, rgba(255, 216, 110, 0.05) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 216, 110, 0.05) 25%, transparent 25%);
+  background-size: 40px 40px, 40px 40px, 20px 20px, 20px 20px;
+  background-position: 0 0, 20px 20px, 0 0, 10px 10px;
+}
+
+.card-pattern-navigator {
+  background-image: 
+    linear-gradient(60deg, rgba(93, 71, 119, 0.1) 25%, transparent 25%),
+    linear-gradient(-60deg, rgba(93, 71, 119, 0.1) 25%, transparent 25%),
+    linear-gradient(30deg, rgba(93, 71, 119, 0.05) 25%, transparent 25%),
+    linear-gradient(-30deg, rgba(93, 71, 119, 0.05) 25%, transparent 25%);
+  background-size: 30px 30px, 30px 30px, 15px 15px, 15px 15px;
+  background-position: 0 0, 15px 15px, 7px 7px, 22px 22px;
+}
+
+.card-pattern-business {
+  background-image: 
+    repeating-linear-gradient(45deg, rgba(36, 123, 160, 0.08) 0, rgba(36, 123, 160, 0.08) 2px, transparent 2px, transparent 8px),
+    repeating-linear-gradient(-45deg, rgba(36, 123, 160, 0.08) 0, rgba(36, 123, 160, 0.08) 2px, transparent 2px, transparent 8px),
+    radial-gradient(circle at 50% 50%, rgba(36, 123, 160, 0.05) 30%, transparent 30%);
+  background-size: 24px 24px, 24px 24px, 48px 48px;
+  background-position: 0 0, 12px 12px, 0 0;
 }
 
 /* Floating animations */

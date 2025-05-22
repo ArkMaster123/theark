@@ -21,19 +21,19 @@ export function AboutSection() {
             <TabsList className="bg-[#0A1628] border-2 border-[#F8E8BE] pixel-border">
               <TabsTrigger
                 value="what"
-                className="data-[state=active]:bg-[#FFD86E] data-[state=active]:text-[#0D1B33] text-[#F8E8BE]"
+                className="data-[state=active]:bg-[#FFD86E] data-[state=active]:text-[#0D1B33] text-[#F8E8BE] font-pixel"
               >
                 What We Do
               </TabsTrigger>
               <TabsTrigger
                 value="how"
-                className="data-[state=active]:bg-[#FFD86E] data-[state=active]:text-[#0D1B33] text-[#F8E8BE]"
+                className="data-[state=active]:bg-[#FFD86E] data-[state=active]:text-[#0D1B33] text-[#F8E8BE] font-pixel"
               >
                 How It Works
               </TabsTrigger>
               <TabsTrigger
                 value="why"
-                className="data-[state=active]:bg-[#FFD86E] data-[state=active]:text-[#0D1B33] text-[#F8E8BE]"
+                className="data-[state=active]:bg-[#FFD86E] data-[state=active]:text-[#0D1B33] text-[#F8E8BE] font-pixel"
               >
                 Why TH3 ARK
               </TabsTrigger>

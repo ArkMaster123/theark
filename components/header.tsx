@@ -40,7 +40,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8 font-pixel">
             <Link
               href="#about"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
@@ -94,7 +94,7 @@ export function Header() {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <nav className="md:hidden pt-4 pb-2 flex flex-col space-y-4 animate-fade-in">
+          <nav className="md:hidden pt-4 pb-2 flex flex-col space-y-4 animate-fade-in font-pixel">
             <Link
               href="#about"
               className="text-[#F8E8BE] hover:text-[#FFD86E] transition-colors"
