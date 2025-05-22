@@ -7,6 +7,7 @@ import { PixelatedCharacters } from "@/components/pixelated-characters"
 import { GlowingWindows } from "@/components/glowing-windows"
 import { Header } from "@/components/header"
 import { AboutSection } from "@/components/about-section"
+import { AboutUsSection } from "@/components/about-us-section"
 import { InteractiveFeatures } from "@/components/interactive-features"
 
 // Dynamically import components with SSR disabled
@@ -55,6 +56,9 @@ export default function Home() {
 
       {/* About Section */}
       <AboutSection />
+
+      {/* About Us Section */}
+      <AboutUsSection />
 
       {/* Interactive Features */}
       <section className="py-16 px-4 bg-[#0A1628]">
